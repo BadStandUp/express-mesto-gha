@@ -1,23 +1,34 @@
-const User = require('../models/user');
+const User = require('../models/user.model');
+
+const {
+  DEFAULT_ERROR_CODE,
+  DEFAULT_ERROR_MESSAGE,
+  NOT_FOUND_CODE,
+  NOT_FOUND_USER_MESSAGE,
+} = require('../utils/constants');
 
 module.exports.createUser = (req, res) => {
   const {name, about, avatar} = req.body;
+  console.log(req.user._id);
   User.create({name, about, avatar})
     .then((user) => {
       res.send({data: user})
     })
     .catch(() => {
-      res.status(500).send({message: 'Произошла ошибка'})
+      res.status(DEFAULT_ERROR_CODE).send({message: DEFAULT_ERROR_MESSAGE})
     })
 }
 
 module.exports.getUserById = (req, res) => {
-  User.findById(req.user._id)
+  User.findById(req.user._id).orFail(() => {
+    res.status(NOT_FOUND_CODE);
+    res.send(NOT_FOUND_USER_MESSAGE)
+  })
     .then((user) => {
       res.send({user})
     })
     .catch(() => {
-      res.status(500).send({message: 'Произошла ошибка'})
+      res.status(DEFAULT_ERROR_CODE).send({message: DEFAULT_ERROR_MESSAGE})
     })
 }
 
@@ -27,17 +38,22 @@ module.exports.getUsers = (req, res) => {
       res.send({data: users})
     })
     .catch(() => {
-      res.status(500).send({message: 'Произошла ошибка'})
+      res.status(DEFAULT_ERROR_CODE).send({message: DEFAULT_ERROR_MESSAGE})
     })
 }
 
 function updateUser(req, res, info) {
-  User.findByIdAndUpdate(req.user._id, info)
+  User.findByIdAndUpdate(req.user._id, info, {
+    new: true,
+  }).orFail(() => {
+    res.status(NOT_FOUND_CODE);
+    res.send(NOT_FOUND_USER_MESSAGE)
+  })
     .then((user) => {
       res.send({data: user})
     })
     .catch(() => {
-      res.status(500).send({message: 'Произошла ошибка'})
+      res.status(DEFAULT_ERROR_CODE).send({message: DEFAULT_ERROR_MESSAGE})
     })
 }
 
