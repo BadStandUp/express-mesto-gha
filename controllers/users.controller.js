@@ -48,8 +48,7 @@ function updateUser(req, res, info) {
     new: true,
     runValidators: true,
   }).orFail(() => {
-    res.status(NOT_FOUND_CODE);
-    res.send(NOT_FOUND_USER_MESSAGE);
+    res.status(NOT_FOUND_CODE).send(NOT_FOUND_USER_MESSAGE);
   })
     .then((user) => {
       res.send({ data: user });

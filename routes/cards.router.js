@@ -5,7 +5,7 @@ const {
   getCards,
   deleteCard,
   likeCard,
-  dislikeCard
+  dislikeCard,
 } = require('../controllers/cards.controller');
 
 router.post('/', createCard);
