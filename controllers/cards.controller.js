@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { Error } = require('mongoose');
 const Card = require('../models/card.model');
 
 const {
@@ -11,7 +10,7 @@ const {
   INCORRECT_ERROR_MESSAGE,
 } = require('../utils/constants');
 
-module.exports.createCard = (req, res, next) => {
+module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => {
@@ -19,9 +18,10 @@ module.exports.createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(new Error(`${INCORRECT_ERROR_MESSAGE} при создании карточки`));
+        res.send(`${INCORRECT_ERROR_MESSAGE} при создании карточки`);
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
       }
-      return next(err);
     });
 };
 
@@ -36,7 +36,7 @@ module.exports.getCards = (req, res) => {
     });
 };
 
-module.exports.deleteCard = (req, res, next) => {
+module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId).orFail(() => {
     res.status(NOT_FOUND_CODE).send(NOT_FOUND_CARD_MESSAGE);
   })
@@ -45,13 +45,14 @@ module.exports.deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        next(new Error(`${INCORRECT_ERROR_MESSAGE} карточки`));
+        res.send(`${INCORRECT_ERROR_MESSAGE} карточки`);
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
       }
-      return next(err);
     });
 };
 
-function changeLike(req, res, action, next) {
+function changeLike(req, res, action) {
   Card.findByIdAndUpdate(req.params.cardId, action, { new: true })
     .populate('likes')
     .orFail(() => {
@@ -62,9 +63,10 @@ function changeLike(req, res, action, next) {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        next(new Error(`${INCORRECT_ERROR_MESSAGE} для лайка`));
+        res.send(`${INCORRECT_ERROR_MESSAGE} для лайка`);
+      } else {
+        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
       }
-      return next(err);
     });
 }
 

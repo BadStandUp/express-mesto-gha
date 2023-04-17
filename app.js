@@ -28,8 +28,8 @@ app.use((req, res, next) => {
 app.use('/users', require('./routes/users.router'));
 app.use('/cards', require('./routes/cards.router'));
 
-app.use((req, res, next) => {
-  next(res.status(NOT_FOUND_CODE).send({ message: NOT_FOUND_ERROR }));
+app.use((req, res) => {
+  res.status(NOT_FOUND_CODE).send({ message: NOT_FOUND_ERROR });
 });
 
 app.listen(PORT, () => {
