@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose').default;
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const { errors } = require('celebrate');
 const limiter = require('./middleware/limiter');
 
 require('dotenv').config();
@@ -28,6 +29,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', router);
 
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(PORT, () => {

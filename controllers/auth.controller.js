@@ -14,7 +14,9 @@ const {
 } = require('../utils/constants');
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar, email, password } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
   return User.findOne({ email })
     .then((user) => {
       if (user !== null) {
@@ -24,7 +26,9 @@ module.exports.createUser = (req, res, next) => {
     .then(() => {
       bcrypt.hash(password, 10)
         .then((hash) => {
-          User.create({ name, about, avatar, email, password: hash });
+          User.create({
+            name, about, avatar, email, password: hash,
+          });
         });
     })
     .then((user) => {
