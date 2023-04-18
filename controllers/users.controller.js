@@ -2,30 +2,13 @@ const mongoose = require('mongoose');
 const User = require('../models/user.model');
 
 const {
-  DEFAULT_ERROR_CODE,
-  DEFAULT_ERROR_MESSAGE,
   NOT_FOUND_CODE,
   NOT_FOUND_USER_MESSAGE,
-  CREATED_CODE,
   INCORRECT_ERROR_MESSAGE,
+  INCORRECT_CODE,
 } = require('../utils/constants');
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => {
-      res.status(CREATED_CODE).send({ data: user });
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        res.send(`${INCORRECT_ERROR_MESSAGE} при создании пользователя`);
-      } else {
-        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
-      }
-    });
-};
-
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.user._id).orFail(() => {
     res.status(NOT_FOUND_CODE).send(NOT_FOUND_USER_MESSAGE);
   })
@@ -34,24 +17,29 @@ module.exports.getUserById = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.send(`${INCORRECT_ERROR_MESSAGE} пользователя`);
-      } else {
-        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
+        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} пользователя` });
       }
+      return next(err);
     });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      res.send({ user });
+    })
+    .catch(next);
+};
+
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.send({ data: users });
     })
-    .catch(() => {
-      res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
-    });
+    .catch(next);
 };
 
-function updateUser(req, res, info) {
+function updateUser(req, res, info, next) {
   User.findByIdAndUpdate(req.user._id, info, {
     new: true,
     runValidators: true,
@@ -64,10 +52,9 @@ function updateUser(req, res, info) {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.send(`${INCORRECT_ERROR_MESSAGE} при обновлении пользователя`);
-      } else {
-        res.status(DEFAULT_ERROR_CODE).send({ message: DEFAULT_ERROR_MESSAGE });
+        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении пользователя` });
       }
+      return next(err);
     });
 }
 

@@ -1,15 +1,18 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose').default;
 const bodyParser = require('body-parser');
-const { NOT_FOUND_ERROR, NOT_FOUND_CODE } = require('./utils/constants');
+const helmet = require('helmet');
+const limiter = require('./middleware/limiter');
 
-const { PORT = 3000 } = process.env;
+require('dotenv').config();
 
-const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
+const router = require('./routes/router');
+const { errorHandler } = require('./middleware/errors');
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/mestodb';
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
 })
   .then(() => console.log('Connected'))
@@ -17,20 +20,15 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
     console.log(err);
   });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6439b0157c938842fc49838f',
-  };
+const app = express();
 
-  next();
-});
+app.use(limiter);
+app.use(helmet());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/users', require('./routes/users.router'));
-app.use('/cards', require('./routes/cards.router'));
+app.use('/', router);
 
-app.use((req, res) => {
-  res.status(NOT_FOUND_CODE).send({ message: NOT_FOUND_ERROR });
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
