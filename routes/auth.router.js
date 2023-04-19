@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
 
 const { login, createUser } = require('../controllers/auth.controller');
+const validateURL = require('../utils/validationConfig');
 
 router.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -16,7 +17,7 @@ router.post('/signup', celebrate({
     password: Joi.string().required(),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri().regex(/^https?:\/\//i),
+    avatar: Joi.string().uri().custom(validateURL),
   }),
 }), createUser);
 

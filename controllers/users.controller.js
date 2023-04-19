@@ -2,22 +2,25 @@ const mongoose = require('mongoose');
 const User = require('../models/user.model');
 
 const {
-  NOT_FOUND_CODE,
   NOT_FOUND_USER_MESSAGE,
   INCORRECT_ERROR_MESSAGE,
-  INCORRECT_CODE,
 } = require('../utils/constants');
+const {
+  IncorrectError,
+  NotFoundError,
+} = require('../errors/errors');
 
 module.exports.getUserById = (req, res, next) => {
-  User.findById(req.user._id).orFail(() => {
-    res.status(NOT_FOUND_CODE).send(NOT_FOUND_USER_MESSAGE);
-  })
+  User.findById(req.user._id)
+    .orFail(() => {
+      throw new NotFoundError(NOT_FOUND_USER_MESSAGE);
+    })
     .then((user) => {
       res.send({ user });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} пользователя` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании пользователя`));
       }
       return next(err);
     });
@@ -45,14 +48,14 @@ function updateUser(req, res, info, next) {
     runValidators: true,
   })
     .orFail(() => {
-      res.status(NOT_FOUND_CODE).send(NOT_FOUND_USER_MESSAGE);
+      throw new NotFoundError(NOT_FOUND_USER_MESSAGE);
     })
     .then((user) => {
       res.send({ data: user });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} при обновлении пользователя` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при обновлении пользователя`));
       }
       return next(err);
     });

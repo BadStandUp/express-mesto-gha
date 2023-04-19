@@ -9,6 +9,8 @@ const {
   getUser,
 } = require('../controllers/users.controller');
 
+const validateURL = require('../utils/validationConfig');
+
 router.get('/me', getUser);
 
 router.get('/:userId', celebrate({
@@ -28,7 +30,7 @@ router.patch('/me', celebrate({
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().uri().regex(/^https?:\/\//i),
+    avatar: Joi.string().required().uri().custom(validateURL),
   }),
 }), updateAvatar);
 

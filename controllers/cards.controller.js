@@ -2,11 +2,12 @@ const mongoose = require('mongoose');
 const Card = require('../models/card.model');
 
 const {
-  NOT_FOUND_CODE,
   NOT_FOUND_CARD_MESSAGE,
   CREATED_CODE,
-  INCORRECT_ERROR_MESSAGE, INCORRECT_CODE,
+  INCORRECT_ERROR_MESSAGE,
+  OK_CODE,
 } = require('../utils/constants');
+const { IncorrectError, NotFoundError, ForbiddenError } = require('../errors/errors');
 
 module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -16,7 +17,7 @@ module.exports.createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} при создании карточки` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} при создании карточки`));
       }
       return next(err);
     });
@@ -32,15 +33,23 @@ module.exports.getCards = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId).orFail(() => {
-    res.status(NOT_FOUND_CODE).send(NOT_FOUND_CARD_MESSAGE);
-  })
+  Card.findById(req.params.cardId)
     .then((card) => {
-      res.send({ data: card });
+      if (!card) {
+        throw new NotFoundError(NOT_FOUND_CARD_MESSAGE);
+      }
+      if (!card.owner.equals(req.user._id)) {
+        throw new ForbiddenError('Доступ запрещён');
+      }
+      card.deleteOne()
+        .then(() => {
+          res.status(OK_CODE).send({ message: 'Карточка удалена' });
+        })
+        .catch(next);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} карточки` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} карточки`));
       }
       return next(err);
     });
@@ -50,14 +59,14 @@ function changeLike(req, res, action, next) {
   Card.findByIdAndUpdate(req.params.cardId, action, { new: true })
     .populate('likes')
     .orFail(() => {
-      res.status(NOT_FOUND_CODE).send(NOT_FOUND_CARD_MESSAGE);
+      throw new NotFoundError(NOT_FOUND_CARD_MESSAGE);
     })
     .then((card) => {
       res.send({ card });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(INCORRECT_CODE).send({ message: `${INCORRECT_ERROR_MESSAGE} для лайка` });
+        next(new IncorrectError(`${INCORRECT_ERROR_MESSAGE} для лайка`));
       }
       return next(err);
     });

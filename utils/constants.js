@@ -5,6 +5,7 @@ const NOT_FOUND_CODE = 404;
 const UNAUTHORIZED_CODE = 401;
 const CONFLICT_CODE = 409;
 const INCORRECT_CODE = 400;
+const OK_CODE = 200;
 
 const NOT_FOUND_CARD_MESSAGE = 'Передан несуществующий _id карточки.';
 const NOT_FOUND_USER_MESSAGE = 'Пользователь по указанному _id не найден.';
@@ -21,6 +22,7 @@ module.exports = {
   NOT_FOUND_CODE,
   CONFLICT_CODE,
   INCORRECT_CODE,
+  OK_CODE,
   NOT_FOUND_CARD_MESSAGE,
   NOT_FOUND_USER_MESSAGE,
   INCORRECT_ERROR_MESSAGE,
