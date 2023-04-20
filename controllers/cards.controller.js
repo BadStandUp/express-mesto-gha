@@ -27,7 +27,7 @@ module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
     .then((card) => {
-      res.send({ data: card });
+      res.status(OK_CODE).send({ data: card });
     })
     .catch(next);
 };
@@ -56,13 +56,16 @@ module.exports.deleteCard = (req, res, next) => {
 };
 
 function changeLike(req, res, action, next) {
-  Card.findByIdAndUpdate(req.params.cardId, action, { new: true })
-    .populate('likes')
-    .orFail(() => {
-      throw new NotFoundError(NOT_FOUND_CARD_MESSAGE);
-    })
+  Card.findByIdAndUpdate(req.params.cardId, action, {
+    new: true,
+    runValidators: true,
+  })
+    .populate(['owner', 'likes'])
     .then((card) => {
-      res.send({ card });
+      if (card === null) {
+        throw new NotFoundError(NOT_FOUND_CARD_MESSAGE);
+      }
+      return res.status(OK_CODE).send({ card });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
@@ -72,10 +75,10 @@ function changeLike(req, res, action, next) {
     });
 }
 
-module.exports.likeCard = (req, res) => {
-  changeLike(req, res, { $addToSet: { likes: req.user._id } });
+module.exports.likeCard = (req, res, next) => {
+  changeLike(req, res, { $addToSet: { likes: req.user._id } }, next);
 };
 
-module.exports.dislikeCard = (req, res) => {
-  changeLike(req, res, { $pull: { likes: req.user._id } });
+module.exports.dislikeCard = (req, res, next) => {
+  changeLike(req, res, { $pull: { likes: req.user._id } }, next);
 };

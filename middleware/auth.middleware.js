@@ -3,11 +3,11 @@ const { UNAUTHORIZED_ERROR_MESSAGE } = require('../utils/constants');
 const { AuthorizationError } = require('../errors/errors');
 
 module.exports.auth = (req, res, next) => {
-  const { auth } = req.headers;
-  if (!auth || !auth.startsWith('Bearer ')) {
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith('Bearer ')) {
     throw new AuthorizationError(UNAUTHORIZED_ERROR_MESSAGE);
   }
-  const token = auth.replace('Bearer ', '');
+  const token = authorization.replace('Bearer ', '');
 
   try {
     const payload = jwt.verify(token, process.env.JWT_TOKEN);
