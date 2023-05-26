@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const { errors } = require('celebrate');
 const limiter = require('./middleware/limiter.middleware');
+const { requestLogger, errorLogger } = require('./middleware/reqlog.middleware');
 
 require('dotenv').config();
 
@@ -31,7 +32,11 @@ app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.use(requestLogger);
+
 app.use('/', router);
+
+app.use(errorLogger);
 
 app.use(errors());
 app.use(errorHandler);
